@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from .serializers import ProductSerializer
@@ -27,8 +28,14 @@ def add(request):
             print(f'Added {validated["quantity"]} x {validated["item_name"]} to cart.')
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+@api_view(['DELETE'])
+def remove(request, pk):
+    product = get_object_or_404(Product, pk = pk)
+    if request.method == 'DELETE':
+        print(f'Removed {product.quantity} x {product.item_name} from cart.')
+        product.delete()
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
-def remove():
-    pass
-def payment():
-    pass
+
+
