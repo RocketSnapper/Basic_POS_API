@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from .serializers import ProductSerializer
 from .models import Product
+from django.template import loader
+from django.http import HttpResponse
 
 def just_for_display_menu():
     print('POS System') 
@@ -37,5 +39,26 @@ def remove(request, pk):
         product.delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
-
+@api_view(['GET'])    
+def payment(request):
+    if request.method == 'GET':
+        products = Product.objects.all().values()
+        prices = list(Product.objects.values_list('price'))
+        print('Items in Cart: ')
+        print(prices)
+        for price in prices:
+            print(list(price))
+        for product in products:
+            print(product)
+        print(products)
+        return Response(status = status.HTTP_204_NO_CONTENT)
+    
+  
+def testing(request):
+        mydata = Product.objects.all()
+        template = loader.get_template('cart-template.html')
+        context = {
+            'myproducts': mydata,
+        }
+        return HttpResponse(template.render(context, request))
 
