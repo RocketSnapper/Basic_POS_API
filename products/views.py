@@ -4,8 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from .serializers import ProductSerializer
 from .models import Product
-from django.template import loader
-from django.http import HttpResponse
+from decimal import Decimal
 
 def just_for_display_menu():
     print('POS System') 
@@ -16,9 +15,10 @@ def just_for_display_menu():
     menu_choice = int(input('Choose an option: '))
     if menu_choice == 4:
         print('Goodbye!')
-        exit()
+        Product.objects.all().delete()
+        exit() 
     else:
-        print('Enjoy Shopping!') 
+        print('Enjoy shopping!') 
 just_for_display_menu()
 
 @api_view(['POST'])
@@ -42,23 +42,31 @@ def remove(request, pk):
 @api_view(['GET'])    
 def payment(request):
     if request.method == 'GET':
-        products = Product.objects.all().values()
-        prices = list(Product.objects.values_list('price'))
-        print('Items in Cart: ')
-        print(prices)
-        for price in prices:
-            print(list(price))
+        products = Product.objects.all()
+        total_price = Decimal('0.00')
+        print('Items in Cart:')
         for product in products:
-            print(product)
-        print(products)
-        return Response(status = status.HTTP_204_NO_CONTENT)
+            if product.price > 0.00:
+                inital_price = product.price
+                if product.quantity > 1:
+                    quantity = Decimal(product.quantity)
+                    product.price = quantity * product.price
+                total_price += product.price
+            print(f'{product.item_name}: {product.quantity} x ${inital_price} = ${product.price}')
+        print(f'Total: ${total_price}')
+        cash = Decimal('100000.00')
+        card = Decimal('100000.00')
+        payment_method = input('Select payment method (cash/card): ')
+        if payment_method == 'cash':
+            cash = cash - total_price
+            print(f'Payment of ${total_price} made using {payment_method}. Thank you for your purchase!')
+        elif payment_method == 'card':
+            card = card - total_price
+            print(f'Payment of ${total_price} made using {payment_method}. Thank you for your purchase!')
+        Product.objects.all().delete()
+        return Response(status = status.HTTP_200_OK)
     
-  
-def testing(request):
-        mydata = Product.objects.all()
-        template = loader.get_template('cart-template.html')
-        context = {
-            'myproducts': mydata,
-        }
-        return HttpResponse(template.render(context, request))
+
+
+
 
